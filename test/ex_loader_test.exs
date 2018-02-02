@@ -28,4 +28,8 @@ defmodule ExLoaderTest do
     module_file = ExLoaderTest.Utils.get_path("modules/beam/Elixir.Corrupted.beam")
     assert {:error, %{reason: :badfile}} = ExLoader.load_module(module_file)
   end
+
+  test "load a tarball which contains applications to be loaded" do
+    
+  end
 end
