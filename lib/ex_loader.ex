@@ -3,16 +3,41 @@ defmodule ExLoader do
   Documentation for ExLoader.
   """
 
+  @beam_ext ".beam"
+
   @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> ExLoader.hello
-      :world
-
+  load a beam file to a node
   """
-  def hello do
-    :world
+  @spec load_module(String.t()) :: {:ok, atom} | {:error, term}
+  def load_module(beam_file), do: load_module(beam_file, node())
+
+  def load_module(beam_file, remote_node) do
+    with {:ok, dst} <- ExLoader.File.copy(remote_node, beam_file),
+         {:ok, module} <- load(remote_node, dst) do
+      {:ok, module}
+    else
+      err -> err
+    end
+  end
+
+  defp load(remote_node, dst) do
+    # :code.load_abs requires a file without extentions. weird.
+    file = String.trim_trailing(dst, @beam_ext)
+    result = :rpc.call(remote_node, :code, :load_abs, [to_charlist(file)])
+
+    case result do
+      {:module, module} ->
+        {:ok, module}
+
+      {:error, reason} ->
+        {:error,
+         %{
+           msg:
+             "Cannot load the file from remote node #{inspect(remote_node)}. Reason: #{
+               inspect(reason)
+             }",
+           reason: reason
+         }}
+    end
   end
 end
