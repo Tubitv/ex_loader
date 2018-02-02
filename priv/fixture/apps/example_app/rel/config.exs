@@ -34,7 +34,7 @@ environment :dev do
 end
 
 environment :prod do
-  set include_erts: true
+  set include_erts: false
   set include_src: false
   set cookie: :"pzG/$v(Xt4S{&j)r?MZsYsyksB?7<@8:%B_k^$&)qG@@Eg6j2~EiW]m0c*d`K,zw"
 end
@@ -50,4 +50,3 @@ release :example_app do
     :runtime_tools
   ]
 end
-
