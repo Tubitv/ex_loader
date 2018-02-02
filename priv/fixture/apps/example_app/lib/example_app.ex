@@ -1,18 +1,6 @@
 defmodule ExampleApp do
-  @moduledoc """
-  Documentation for ExampleApp.
-  """
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> ExampleApp.hello
-      :world
-
-  """
-  def hello do
-    :world
+  @moduledoc false
+  def hello(msg) do
+    ExampleApp.Server.hello(msg)
   end
 end
