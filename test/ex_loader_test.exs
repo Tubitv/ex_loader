@@ -30,6 +30,5 @@ defmodule ExLoaderTest do
   end
 
   test "load a tarball which contains applications to be loaded" do
-    
   end
 end
