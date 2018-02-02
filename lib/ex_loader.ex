@@ -20,6 +20,11 @@ defmodule ExLoader do
     end
   end
 
+  def load_release(tarball), do: load_release(tarball, node())
+  def load_release(tarball, remote_node) do
+    :ok
+  end
+
   defp load(remote_node, dst) do
     # :code.load_abs requires a file without extentions. weird.
     file = String.trim_trailing(dst, @beam_ext)
