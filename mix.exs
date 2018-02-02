@@ -39,6 +39,7 @@ defmodule ExLoader.MixProject do
 
   defp deps do
     [
+      {:nanoid, "~> 1.0.1"},
       # dev & test
       {:credo, "~> 0.8", only: [:dev, :test]},
       {:ex_doc, "~> 0.18", only: [:dev, :test]},
