@@ -34,7 +34,6 @@ defmodule ExLoader.MixProject do
   end
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
-  defp elixirc_paths(:dev), do: elixirc_paths(:test)
   defp elixirc_paths(_), do: ["lib"]
 
   defp deps do
@@ -43,6 +42,8 @@ defmodule ExLoader.MixProject do
       # dev & test
       {:credo, "~> 0.8", only: [:dev, :test]},
       {:ex_doc, "~> 0.18", only: [:dev, :test]},
+      {:httpoison, "~> 1.0", only: [:test]},
+      {:jason, "~> 1.0", onbly: [:test]},
       {:pre_commit_hook, "~> 1.2", only: [:dev]}
     ]
   end

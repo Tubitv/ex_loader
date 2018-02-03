@@ -65,4 +65,23 @@ defmodule ExLoaderTest do
     :ok = ExLoader.load_release(tarball, slave_node)
     assert :rpc.call(slave_node, ExampleApp, :hello, ["world"]) == "hello world"
   end
+
+  test "load a tarball which contains apps with dependencies" do
+    tarball = ExLoaderTest.Utils.get_path("apps/tarball/example_complex_app.tar.gz")
+    slave_node = Utils.get_node_name(@slave_node_name)
+
+    # app is not started in local
+    assert_raise(UndefinedFunctionError, fn -> App1.hello("world") end)
+    # app is not in remote node
+    assert {:badrpc, {:EXIT, {:undef, _}}} = :rpc.call(slave_node, App1, :hello, ["world"])
+    :ok = ExLoader.load_release(tarball, slave_node)
+    assert :rpc.call(slave_node, App1, :hello, ["world"]) == "hello world"
+    assert :rpc.call(slave_node, App2, :hello, ["world"]) == "hello world"
+
+    # test http server works as expected
+    %HTTPoison.Response{body: body} =
+      Utils.http_get("http://127.0.0.1:8888/hello/?msg=blockchain")
+
+    assert Jason.decode!(body) == %{"result" => "hello blockchain"}
+  end
 end

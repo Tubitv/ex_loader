@@ -24,6 +24,18 @@ defmodule ExLoaderTest.Utils do
     :"#{name}@#{to_string(hostname)}"
   end
 
+  def http_get(url), do: http_get(url, 5)
+  def http_get(_url, 0), do: :error
+
+  def http_get(url, n) do
+    :timer.sleep(50)
+
+    case HTTPoison.get(url) do
+      {:ok, res} -> res
+      {:error, _} -> http_get(url, n - 1)
+    end
+  end
+
   defp connect(name) do
     :timer.sleep(30)
 
