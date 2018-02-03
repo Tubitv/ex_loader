@@ -12,6 +12,7 @@ defmodule ExLoaderTest do
     on_exit(fn ->
       Utils.stop_node(@slave_node_name)
     end)
+
     :ok
   end
 

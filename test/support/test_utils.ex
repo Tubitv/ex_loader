@@ -26,6 +26,7 @@ defmodule ExLoaderTest.Utils do
 
   defp connect(name) do
     :timer.sleep(30)
+
     case Node.connect(get_node_name(name)) do
       true -> true
       false -> connect(name)
