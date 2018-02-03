@@ -14,6 +14,25 @@ defmodule ExLoader.File do
     end
   end
 
+  def uncompress(remote_node, tarball) do
+    parent = Path.dirname(tarball)
+
+    {_, status} =
+      :rpc.call(remote_node, System, :cmd, [
+        "tar",
+        ["zxvf", tarball],
+        [cd: parent, stderr_to_stdout: true]
+      ])
+
+    case status do
+      0 ->
+        :ok
+
+      _ ->
+        {:error, %{msg: "failed to uncompress the release tarball: #{tarball}", reason: :badfile}}
+    end
+  end
+
   defp mkdir_p(remote_node, src) do
     dst = "/tmp/#{@prefix}.#{Nanoid.generate()}/#{Path.basename(src)}"
     result = :rpc.call(remote_node, File, :mkdir_p, [Path.dirname(dst)])

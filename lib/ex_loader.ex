@@ -20,6 +20,23 @@ defmodule ExLoader do
     end
   end
 
+  def load_apps(tarball, apps), do: load_apps(tarball, apps, node())
+
+  def load_apps(tarball, apps, remote_node) do
+    with {:ok, dst} <- ExLoader.File.copy(remote_node, tarball),
+         :ok <- ExLoader.File.uncompress(remote_node, dst) do
+      ExLoader.Release.load(remote_node, Path.dirname(dst), apps)
+    else
+      err -> err
+    end
+  end
+
+  def load_release(tarball), do: load_release(tarball, node())
+
+  def load_release(tarball, remote_node) do
+    load_apps(tarball, nil, remote_node)
+  end
+
   defp load(remote_node, dst) do
     # :code.load_abs requires a file without extentions. weird.
     file = String.trim_trailing(dst, @beam_ext)
