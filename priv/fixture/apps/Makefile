@@ -1,4 +1,4 @@
-APPS=example_app
+APPS=example_app example_complex_app
 
 build: $(APPS)
 	@echo bad file > tarball/corrupted.tar.gz

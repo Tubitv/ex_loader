@@ -5,9 +5,10 @@ defmodule ExLoader.Release do
 
   def load(remote_node, base, apps \\ nil) do
     with {:ok, rel_file} <- get_rel_file(remote_node, base),
-         {:ok, new_apps} <- get_new_apps(remote_node, rel_file),
-         {:ok, _} <- add_paths(remote_node, base, new_apps) do
-      load_apps(remote_node, apps || Enum.map(new_apps, fn {app, _} -> app end))
+         {:ok, ver, new_apps} <- get_new_apps(remote_node, rel_file),
+         {:ok, _paths} <- add_paths(remote_node, base, new_apps),
+         :ok <- load_sys_config(remote_node, ver, base) do
+      load_apps(remote_node, apps || Enum.map(new_apps, fn app -> elem(app, 0) end))
     else
       err -> err
     end
@@ -26,9 +27,14 @@ defmodule ExLoader.Release do
   end
 
   defp get_new_apps(remote_node, rel_file) do
-    {:release, _, _, apps} = read_config(remote_node, rel_file)
-    started_apps = Enum.map(Application.started_applications(), fn {app, _, _} -> app end)
-    {:ok, Enum.filter(apps, fn {app, _} -> app not in started_apps end)}
+    {:release, {_, ver}, _, apps} = read_config(remote_node, rel_file)
+
+    started_apps =
+      Enum.map(:rpc.call(remote_node, Application, :started_applications, []), fn {app, _, _} ->
+        app
+      end)
+
+    {:ok, ver, Enum.filter(apps, fn app -> elem(app, 0) not in started_apps end)}
   end
 
   defp add_paths(remote_node, base, apps) do
@@ -41,14 +47,30 @@ defmodule ExLoader.Release do
     {:ok, paths}
   end
 
+  defp load_sys_config(remote_node, ver, base) do
+    sys_config = "#{base}/releases/#{ver}/sys.config"
+
+    remote_node
+    |> read_config(sys_config)
+    |> Enum.each(fn {app, data} ->
+      Enum.each(data, fn {k, v} ->
+        :rpc.call(remote_node, Application, :put_env, [app, k, v, [persistent: true]])
+      end)
+    end)
+
+    :ok
+  end
+
   defp load_apps(remote_node, apps) do
-    Enum.each(apps, fn app -> :rpc.call(remote_node, Application, :ensure_all_started, [app]) end)
+    Enum.each(apps, fn app ->
+      :rpc.call(remote_node, Application, :ensure_all_started, [app])
+    end)
   end
 
   defp get_paths(base, apps) do
     apps
-    |> Enum.map(fn {app, ver} ->
-      parent = Path.join(base, "lib/#{app}-#{ver}")
+    |> Enum.map(fn app ->
+      parent = Path.join(base, "lib/#{elem(app, 0)}-#{elem(app, 1)}")
 
       parent
       |> File.ls!()
