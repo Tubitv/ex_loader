@@ -9,8 +9,10 @@ defmodule ExLoaderTest do
     Node.start(Utils.get_node_name(@test_node_name), :shortnames)
     Utils.start_node(@slave_node_name)
 
+    # stop the remote server and clean up tmp files
     on_exit(fn ->
       Utils.stop_node(@slave_node_name)
+      :os.cmd('rm -rf /tmp/ex_loader.*')
     end)
 
     :ok
