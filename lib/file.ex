@@ -14,9 +14,15 @@ defmodule ExLoader.File do
     end
   end
 
-  def uncompress(tarball) do
+  def uncompress(remote_node, tarball) do
     parent = Path.dirname(tarball)
-    {_, status} = System.cmd("tar", ["zxvf", tarball], cd: parent, stderr_to_stdout: true)
+
+    {_, status} =
+      :rpc.call(remote_node, System, :cmd, [
+        "tar",
+        ["zxvf", tarball],
+        [cd: parent, stderr_to_stdout: true]
+      ])
 
     case status do
       0 ->

@@ -16,18 +16,6 @@ defmodule ExLoaderTest do
     :ok
   end
 
-  test "load an existing module will make that module available " do
-    module_file = ExLoaderTest.Utils.get_path("modules/beam/Elixir.Example.Fab.beam")
-    slave_node = Utils.get_node_name(@slave_node_name)
-
-    # module is not in local
-    assert_raise(UndefinedFunctionError, fn -> Example.Fab.value(0) end)
-    # module is not in slave node
-    assert {:badrpc, {:EXIT, {:undef, _}}} = :rpc.call(slave_node, Example.Fab, :value, [0])
-    {:ok, module} = ExLoader.load_module(module_file, slave_node)
-    assert :rpc.call(slave_node, module, :value, [0]) == 0
-  end
-
   test "load a non-existing module will return error" do
     module_file = ExLoaderTest.Utils.get_path("modules/beam/Elixir.Example.Fab1.beam")
     slave_node = Utils.get_node_name(@slave_node_name)
@@ -40,15 +28,39 @@ defmodule ExLoaderTest do
     assert {:error, %{reason: :badfile}} = ExLoader.load_module(module_file, slave_node)
   end
 
+  test "load an existing module will make that module available " do
+    module_file = ExLoaderTest.Utils.get_path("modules/beam/Elixir.Example.Fab.beam")
+    slave_node = Utils.get_node_name(@slave_node_name)
+
+    # module is not in local
+    assert_raise(UndefinedFunctionError, fn -> Example.Fab.value(0) end)
+    # module is not in slave node
+    assert {:badrpc, {:EXIT, {:undef, _}}} = :rpc.call(slave_node, Example.Fab, :value, [0])
+    {:ok, module} = ExLoader.load_module(module_file, slave_node)
+    assert :rpc.call(slave_node, module, :value, [0]) == 0
+  end
+
+  test "load a non-existent tarball" do
+    module_file = ExLoaderTest.Utils.get_path("apps/tarball/example_app1.tar.gz")
+    slave_node = Utils.get_node_name(@slave_node_name)
+    assert {:error, %{reason: :enoent}} = ExLoader.load_release(module_file, slave_node)
+  end
+
+  test "load a bad tarball" do
+    module_file = ExLoaderTest.Utils.get_path("apps/tarball/corrupted.tar.gz")
+    slave_node = Utils.get_node_name(@slave_node_name)
+    assert {:error, %{reason: :badfile}} = ExLoader.load_release(module_file, slave_node)
+  end
+
   test "load a tarball which contains applications to be loaded" do
     tarball = ExLoaderTest.Utils.get_path("apps/tarball/example_app.tar.gz")
-    my_node = node()
+    slave_node = Utils.get_node_name(@slave_node_name)
 
     # app is not started in local
     assert_raise(UndefinedFunctionError, fn -> ExampleApp.hello("world") end)
-    # app is not in remote node (actually node(self))
-    assert {:badrpc, {:EXIT, {:undef, _}}} = :rpc.call(my_node, ExampleApp, :hello, ["world"])
-    :ok = ExLoader.load_release(tarball, my_node)
-    assert :rpc.call(my_node, ExampleApp, :hello, ["world"]) == "hello world"
+    # app is not in remote node
+    assert {:badrpc, {:EXIT, {:undef, _}}} = :rpc.call(slave_node, ExampleApp, :hello, ["world"])
+    :ok = ExLoader.load_release(tarball, slave_node)
+    assert :rpc.call(slave_node, ExampleApp, :hello, ["world"]) == "hello world"
   end
 end

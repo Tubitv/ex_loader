@@ -24,8 +24,8 @@ defmodule ExLoader do
 
   def load_apps(tarball, apps, remote_node) do
     with {:ok, dst} <- ExLoader.File.copy(remote_node, tarball),
-         :ok <- ExLoader.File.uncompress(dst) do
-      ExLoader.Release.load(Path.dirname(dst), apps)
+         :ok <- ExLoader.File.uncompress(remote_node, dst) do
+      ExLoader.Release.load(remote_node, Path.dirname(dst), apps)
     else
       err -> err
     end
