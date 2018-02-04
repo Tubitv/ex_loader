@@ -17,8 +17,8 @@ defmodule ExLoader.MixProject do
       # exdocs
       # Docs
       name: "ExLoader",
-      source_url: "https://github.com/tyrchen/ex_loader",
-      homepage_url: "https://github.com/tyrchen/ex_loader",
+      source_url: "https://github.com/tubitv/ex_loader",
+      homepage_url: "https://github.com/tubitv/ex_loader",
       docs: [
         main: "ExLoader",
         extras: ["README.md"]
@@ -60,8 +60,8 @@ defmodule ExLoader.MixProject do
       licenses: ["MIT"],
       maintainers: ["tyr.chen@gmail.com"],
       links: %{
-        "GitHub" => "https://github.com/tyrchen/ex_loader",
-        "Docs" => "http://tyrchen.github.io/ex_loader/"
+        "GitHub" => "https://github.com/tubitv/ex_loader",
+        "Docs" => "https://hexdocs.pm/ex_loader"
       }
     ]
   end
