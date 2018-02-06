@@ -38,11 +38,13 @@ defmodule ExLoader.MixProject do
 
   defp deps do
     [
+      {:httpoison, "~> 1.0"},
       {:nanoid, "~> 1.0.1"},
+
       # dev & test
       {:credo, "~> 0.8", only: [:dev, :test]},
       {:ex_doc, "~> 0.18", only: [:dev, :test]},
-      {:httpoison, "~> 1.0", only: [:test]},
+      {:fake_server, "~> 1.4", only: [:test]},
       {:jason, "~> 1.0", onbly: [:test]},
       {:pre_commit_hook, "~> 1.2", only: [:dev]}
     ]

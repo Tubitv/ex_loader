@@ -6,6 +6,12 @@ defmodule ExLoader do
   @beam_ext ".beam"
 
   @doc """
+  Check if given file is valid or not
+  """
+  @spec valid_file?(String.tag()) :: boolean
+  def valid_file?(src), do: ExLoader.File.valid_file?(src)
+
+  @doc """
   load a single beam to a remote node
 
   Behind the scenes, it uses `:code.load_abs/1`.
@@ -15,7 +21,6 @@ defmodule ExLoader do
       iex> :rpc.call(node(), Hello, :say, ["world"])
       "hello world"
   """
-
   @spec load_module(String.t()) :: {:ok, atom} | {:error, term}
   @spec load_module(String.t(), node) :: {:ok, atom} | {:error, term}
   def load_module(beam_file), do: load_module(beam_file, node())

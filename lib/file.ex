@@ -2,7 +2,23 @@ defmodule ExLoader.File do
   @moduledoc """
   copy file to remote nodes.
   """
+  alias ExLoader.Adapters
+
+  @adapters %{
+    file: Adapters.File,
+    http: Adapters.Http
+  }
+
   @prefix Atom.to_string(ExLoader.MixProject.project()[:app])
+
+  def valid_file?(src) do
+    adapter = get_adapter(src)
+
+    case adapter do
+      nil -> false
+      adapter -> apply(adapter, :valid?, src)
+    end
+  end
 
   def copy(remote_node, src) do
     with {:ok, bin} <- read(src),
@@ -66,12 +82,24 @@ defmodule ExLoader.File do
   end
 
   defp read(src) do
-    case File.read(src) do
-      {:ok, bin} ->
-        {:ok, bin}
+    adapter = get_adapter(src)
 
-      {:error, reason} ->
-        {:error, %{msg: "cannot read file #{src}. Reason: #{inspect(reason)}", reason: reason}}
+    case adapter do
+      nil -> {:error, %{msg: "not supported file #{src}", reason: :badfile}}
+      _ -> apply(adapter, :get_content, [src])
     end
+  end
+
+  defp get_adapter(src) do
+    %URI{scheme: scheme} = URI.parse(src)
+
+    type =
+      case scheme do
+        nil -> :file
+        s when s in ["https", "http", "ftp"] -> :http
+        _ -> nil
+      end
+
+    Map.get(@adapters, type)
   end
 end
