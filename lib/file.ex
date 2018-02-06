@@ -16,7 +16,7 @@ defmodule ExLoader.File do
 
     case adapter do
       nil -> false
-      adapter -> apply(adapter, :valid?, src)
+      adapter -> apply(adapter, :valid?, [src])
     end
   end
 

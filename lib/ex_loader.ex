@@ -8,7 +8,7 @@ defmodule ExLoader do
   @doc """
   Check if given file is valid or not
   """
-  @spec valid_file?(String.tag()) :: boolean
+  @spec valid_file?(String.t()) :: boolean
   def valid_file?(src), do: ExLoader.File.valid_file?(src)
 
   @doc """
