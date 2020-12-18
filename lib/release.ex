@@ -17,7 +17,7 @@ defmodule ExLoader.Release do
   defp get_rel_file(remote_node, base) do
     rel_file =
       remote_node
-      |> :rpc.call(Path, :wildcard, ["#{base}/releases/*.rel"])
+      |> :rpc.call(Path, :wildcard, ["#{base}/releases/**/*.rel"])
       |> List.first()
 
     case rel_file do
