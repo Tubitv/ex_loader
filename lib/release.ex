@@ -17,7 +17,7 @@ defmodule ExLoader.Release do
   defp get_rel_file(remote_node, base) do
     rel_file =
       remote_node
-      |> :rpc.call(Path, :wildcard, ["#{base}/releases/**/*.rel"])
+      |> :rpc.call(:filelib, :wildcard, [to_charlist("#{base}/releases/**/*.rel")])
       |> List.first()
 
     case rel_file do
@@ -30,7 +30,7 @@ defmodule ExLoader.Release do
     {:release, {_, ver}, _, apps} = read_config(remote_node, rel_file)
 
     started_apps =
-      Enum.map(:rpc.call(remote_node, Application, :started_applications, []), fn {app, _, _} ->
+      Enum.map(:rpc.call(remote_node, :application, :loaded_applications, []), fn {app, _, _} ->
         app
       end)
 
@@ -54,7 +54,7 @@ defmodule ExLoader.Release do
     |> read_config(sys_config)
     |> Enum.each(fn {app, data} ->
       Enum.each(data, fn {k, v} ->
-        :rpc.call(remote_node, Application, :put_env, [app, k, v, [persistent: true]])
+        :rpc.call(remote_node, :application, :set_env, [app, k, v, [persistent: true]])
       end)
     end)
 
@@ -63,7 +63,7 @@ defmodule ExLoader.Release do
 
   defp load_apps(remote_node, apps) do
     Enum.each(apps, fn app ->
-      :rpc.call(remote_node, Application, :ensure_all_started, [app])
+      :rpc.call(remote_node, :application, :ensure_all_started, [app])
     end)
   end
 
@@ -72,17 +72,18 @@ defmodule ExLoader.Release do
     |> Enum.map(fn app ->
       parent = Path.join(base, "lib/#{elem(app, 0)}-#{elem(app, 1)}")
 
-      :rpc.call(remote_node, File, :ls!, [parent])
-      |> Enum.map(&Path.join(parent, &1))
+      {:ok, filenames} = :rpc.call(remote_node, :file, :list_dir, [to_charlist(parent)])
+
+      Enum.map(filenames, &Path.join(parent, &1))
       |> Enum.filter(fn p ->
-        :rpc.call(remote_node, File, :dir?, [p]) and Path.basename(p) != "priv"
+        :rpc.call(remote_node, :filelib, :is_dir, [to_charlist(p)]) and Path.basename(p) != "priv"
       end)
     end)
     |> List.flatten()
   end
 
   defp read_config(remote_node, file) do
-    content = :rpc.call(remote_node, File, :read!, [file])
+    {:ok, content} = :rpc.call(remote_node, :file, :read_file, [file])
     {:ok, tokens, _} = :erl_scan.string(to_charlist(content))
     {:ok, [form]} = :erl_parse.parse_exprs(tokens)
     {:value, v, _} = :erl_eval.expr(form, [])
