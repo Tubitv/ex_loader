@@ -56,7 +56,7 @@ defmodule ExLoaderTest do
   end
 
   test "load a tarball which contains applications to be loaded" do
-    tarball = ExLoaderTest.Utils.get_path("apps/tarball/example_app.tar.gz")
+    tarball = ExLoaderTest.Utils.get_path("apps/tarball/example_app-0.1.0.tar.gz")
     slave_node = Utils.get_node_name(@slave_node_name)
 
     # app is not started in local
@@ -69,7 +69,7 @@ defmodule ExLoaderTest do
 
   describe "load a tarball from http url which contains apps with dependencies" do
     test_with_server "server return the file" do
-      tarball = ExLoaderTest.Utils.get_path("apps/tarball/example_complex_app.tar.gz")
+      tarball = ExLoaderTest.Utils.get_path("apps/tarball/example_complex_app-0.1.0.tar.gz")
       url = "http://#{FakeServer.address()}/example.tar.gz"
 
       route(

@@ -4,8 +4,15 @@ defmodule ExampleComplexApp.MixProject do
   def project do
     [
       apps_path: "apps",
+      version: "0.1.0",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      releases: [
+        example_complex_app: [
+          applications: [app1: :permanent, app2: :permanent],
+          steps: [:assemble, :tar]
+        ]
+      ]
     ]
   end
 

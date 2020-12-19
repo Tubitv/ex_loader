@@ -31,27 +31,43 @@ defmodule ExLoader.File do
   end
 
   def uncompress(remote_node, tarball) do
-    parent = Path.dirname(tarball)
+    {:ok, dst} = mkdir_p(remote_node, tarball)
 
-    {_, status} =
-      :rpc.call(remote_node, System, :cmd, [
-        "tar",
-        ["zxvf", tarball],
-        [cd: parent, stderr_to_stdout: true]
-      ])
+    # uncompress in local with erlang stdlib
+    file =
+      case read(tarball) do
+        {:ok, file} -> file
+        err -> throw(err)
+      end
 
-    case status do
-      0 ->
-        :ok
+    case :erl_tar.extract({:binary, file}, [:memory, :compressed]) do
+      {:ok, files} ->
+        Enum.each(files, fn {filename, raw} ->
+          file_path = Path.join([Path.dirname(dst), filename])
 
-      _ ->
+          with :ok <- :rpc.call(remote_node, :filelib, :ensure_dir, [to_charlist(file_path)]),
+               {:ok, _} <- write(remote_node, file_path, raw) do
+            :ok
+          else
+            err -> throw(err)
+          end
+        end)
+
+        {:ok, dst}
+
+      {:error, _} ->
         {:error, %{msg: "failed to uncompress the release tarball: #{tarball}", reason: :badfile}}
     end
+  catch
+    err -> err
   end
 
   defp mkdir_p(remote_node, src) do
     dst = "/tmp/#{@prefix}.#{Nanoid.generate()}/#{Path.basename(src)}"
-    result = :rpc.call(remote_node, File, :mkdir_p, [Path.dirname(dst)])
+
+    # erlang  filelib:ensure_dir, must end with "/"
+    target_dir_path = to_charlist("#{Path.dirname(dst)}/")
+    result = :rpc.call(remote_node, :filelib, :ensure_dir, [target_dir_path])
 
     case result do
       :ok ->
@@ -69,7 +85,7 @@ defmodule ExLoader.File do
   end
 
   defp write(remote_node, dst, bin) do
-    result = :rpc.call(remote_node, File, :write, [dst, bin])
+    result = :rpc.call(remote_node, :file, :write_file, [to_charlist(dst), bin])
 
     case result do
       :ok ->
