@@ -39,7 +39,7 @@ defmodule ExLoader.Release do
 
   defp add_paths(remote_node, base, apps) do
     paths =
-      Enum.map(get_paths(base, apps), fn p ->
+      Enum.map(get_paths(base, apps, remote_node), fn p ->
         :rpc.call(remote_node, :code, :add_path, [to_charlist(p)])
         p
       end)
@@ -67,15 +67,16 @@ defmodule ExLoader.Release do
     end)
   end
 
-  defp get_paths(base, apps) do
+  defp get_paths(base, apps, remote_node) do
     apps
     |> Enum.map(fn app ->
       parent = Path.join(base, "lib/#{elem(app, 0)}-#{elem(app, 1)}")
 
-      parent
-      |> File.ls!()
+      :rpc.call(remote_node, File, :ls!, [parent])
       |> Enum.map(&Path.join(parent, &1))
-      |> Enum.filter(fn p -> File.dir?(p) and Path.basename(p) != "priv" end)
+      |> Enum.filter(fn p ->
+        :rpc.call(remote_node, File, :dir?, [p]) and Path.basename(p) != "priv"
+      end)
     end)
     |> List.flatten()
   end
